@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finish Goods Monitoring Form</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.5/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="spinner-overlay" id="loadingSpinner">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="form-container">
+        <div class="form-header">
+            <h1><i class="fas fa-clipboard-check"></i> Finish Goods Monitoring Form - GEMINI</h1>
+            <p>Quality Control Inspection System</p>
+            <span id="draftStatus" class="badge bg-light text-dark mt-2" style="display:none; font-weight:normal;">
+                <i class="fas fa-save"></i> Draft Saved
+            </span>
+        </div>
+
+        <div class="form-body">
+            <h2 class="section-title">Section 1: Identity & Standard</h2>
+            
+            <form id="qcForm">
+                <input type="hidden" id="formNumber" name="formNumber">
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="checkDate" class="form-label">Date <span class="required">*</span></label>
+                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="showRecallDialog()" title="View History">
+                            <i class="fas fa-history"></i> History
+                        </button>
+                        <input type="date" id="checkDate" name="checkDate" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="prodDate" class="form-label">Production Date <span class="required">*</span></label>
+                        <input type="date" id="prodDate" name="prodDate" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="productItem" class="form-label">
+                        Item/Product <span class="required">*</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="refreshProductMatrix()" title="Refresh product list">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </label>
+                    <select id="productItem" name="productItem" class="form-select" required onchange="populateStandards()">
+                        <option value="">-- Select Product --</option>
+                        </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="expDate" class="form-label">Expiration Date <span class="required">*</span></label>
+                        <input type="date" id="expDate" name="expDate" class="form-control" required>
+                        <small class="form-text text-muted" id="expDateHelp">
+                            <i class="fas fa-magic"></i> Auto-calculated from shelf life
+                        </small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="shift" class="form-label">Shift <span class="required">*</span></label>
+                        <select id="shift" name="shift" class="form-select" required>
+                            <option value="">-- Select Shift --</option>
+                            <option value="Morning (06:00 - 14:00)">Morning (06:00 - 14:00)</option>
+                            <option value="Afternoon (14:00 - 22:00)">Afternoon (14:00 - 22:00)</option>
+                            <option value="Night (22:00 - 06:00)">Night (22:00 - 06:00)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="line" class="form-label">
+                            Line/Machine <span class="required">*</span>
+                            <button type="button" class="btn btn-sm btn-outline-info ms-2" onclick="refreshLines()" title="Refresh lines">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </label>
+                        <input type="text" id="line" name="line" class="form-control" placeholder="Select or type line..." list="lineDatalist" autocomplete="off" required>
+                        <datalist id="lineDatalist"></datalist>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="group" class="form-label">Group <span class="required">*</span></label>
+                        <input type="text" id="group" name="group" class="form-control" placeholder="Group name" required>
+                    </div>
+                </div>
+
+                <div class="standard-box mb-4">
+                    <h5 class="mb-3"><i class="fas fa-star"></i> STANDARD</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Display Box</h6>
+                            <div class="mb-2">
+                                <label class="form-label-sm">Production Code:</label>
+                                <input type="text" id="stdBoxPCode" class="form-control form-control-sm" readonly>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label-sm">Content:</label>
+                                <input type="text" id="stdBoxContent" class="form-control form-control-sm" readonly>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label-sm">Color:</label>
+                                <input type="text" id="stdBoxColor" class="form-control form-control-sm" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success">Bag or Sachet</h6>
+                            <div class="mb-2">
+                                <label class="form-label-sm">Seal:</label>
+                                <input type="text" id="stdSachetSeal" class="form-control form-control-sm" value="0%" readonly>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label-sm">Production Code:</label>
+                                <input type="text" id="stdSachetPCode" class="form-control form-control-sm" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="section-title">Section 2: Pallet Checking</h2>
+                    <button type="button" class="btn btn-sm btn-success mb-3" onclick="addPalletRow()">
+                        <i class="fas fa-plus-circle"></i> Add Pallet
+                    </button>
+                </div>
+                
+                <div class="table-responsive table-wrapper">
+                    <table class="table table-bordered checking-table" id="checkingTable">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="width: 60px;">#</th>
+                                <th rowspan="2" style="width: 90px;">Time</th>
+                                <th rowspan="2" style="width: 70px;">Qty</th>
+                                <th colspan="3" class="table-primary">BOX / DISPLAY</th>
+                                <th colspan="2" class="table-success">SAK / SACHET</th>
+                                <th rowspan="2" style="width: 70px;">%OK</th>
+                                <th rowspan="2" style="min-width: 150px;">Notes</th>
+                                <th rowspan="2" style="width: 80px;">Action</th>
+                            </tr>
+                            <tr>
+                                <th class="table-primary">P. Code</th>
+                                <th class="table-primary">Content</th>
+                                <th class="table-primary">Color</th>
+                                <th class="table-success">Seal</th>
+                                <th class="table-success">P. Code</th>
+                            </tr>
+                        </thead>
+                        <tbody id="checkingTableBody">
+                            </tbody>
+                    </table>
+                </div>
+
+                <h2 class="section-title mt-4">Section 3: Approval</h2>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="qcPersonnel" class="form-label">QC Personnel <span class="required">*</span></label>
+                        <select id="qcPersonnel" name="qcPersonnel" class="form-select" required>
+                            <option value="">-- Select QC Personnel --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="shiftSupervisor" class="form-label">Shift Supervisor <span class="required">*</span></label>
+                        <select id="shiftSupervisor" name="shiftSupervisor" class="form-select" required>
+                            <option value="">-- Select Shift Supervisor --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="supervisor" class="form-label">Supervisor</label>
+                        <select id="supervisor" name="supervisor" class="form-select">
+                            <option value="">-- Select Supervisor --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="sectionManager" class="form-label">Section Manager</label>
+                        <select id="sectionManager" name="sectionManager" class="form-select">
+                            <option value="">-- Select Section Manager --</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="button-group">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-custom-secondary w-100" onclick="resetForm()">
+                        <i class="fas fa-redo me-2"></i>Reset Form
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-custom-primary w-100" onclick="submitForm()">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.5/dist/sweetalert2.all.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
