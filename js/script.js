@@ -560,10 +560,20 @@ function viewFormDetails(form) {
 function recallForm(form) {
     Swal.close();
     
+    // FIX: Convert date strings to proper format (yyyy-MM-dd)
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        // Handle ISO date format or other formats
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString; // Return as-is if invalid
+        // Format as yyyy-MM-dd
+        return date.toISOString().split('T')[0];
+    };
+    
     // Populate Section 1 with recalled data
-    document.getElementById('checkDate').value = new Date().toISOString().split('T')[0]; // Today's date
-    document.getElementById('prodDate').value = form.prodDate || '';
-    document.getElementById('expDate').value = form.expDate || '';
+    document.getElementById('checkDate').value = formatDateForInput(form.checkDate);
+    document.getElementById('prodDate').value = formatDateForInput(form.prodDate);
+    document.getElementById('expDate').value = formatDateForInput(form.expDate);
     document.getElementById('shift').value = form.shift || '';
     document.getElementById('productItem').value = form.productItem || '';
     document.getElementById('line').value = form.line || '';
@@ -573,36 +583,114 @@ function recallForm(form) {
     document.getElementById('supervisor').value = form.supervisor || '';
     document.getElementById('sectionManager').value = form.sectionManager || '';
     
+    // FIX 2: Store the original form number for editing
+    document.getElementById('formNumber').value = form.formNumber || '';
+    
     // Trigger product selection to populate standards
     if (form.productItem) {
         populateStandards();
     }
     
-    // Clear existing pallet checks (user will add new ones)
+    // FIX 2: Load existing pallet checks instead of clearing them
     document.getElementById('checkingTableBody').innerHTML = '';
     palletCount = 0;
-    addPalletRow();
     
-    // Show success message
+    if (form.palletChecks && form.palletChecks.length > 0) {
+        // Load existing pallet checks
+        form.palletChecks.forEach(pallet => {
+            palletCount++;
+            const tbody = document.getElementById('checkingTableBody');
+            
+            const row = document.createElement('tr');
+            row.id = `palletRow${palletCount}`;
+            row.innerHTML = `
+                <td>
+                    <input type="number" class="form-control" id="noPallet${palletCount}" 
+                           min="1" placeholder="#" value="${pallet.noPallet}" required>
+                </td>
+                <td>
+                    <input type="time" class="form-control" id="time${palletCount}" 
+                           value="${pallet.time}" required>
+                </td>
+                <td>
+                    <input type="number" class="form-control" id="totalCheck${palletCount}" 
+                           min="1" placeholder="qty" value="${pallet.totalCheck}" required 
+                           onchange="calculatePercentOK(${palletCount})">
+                </td>
+                <td>
+                    <select class="form-select" id="boxPCode${palletCount}" required 
+                            onchange="calculatePercentOK(${palletCount})">
+                        <option value="">--</option>
+                        <option value="OK" ${pallet.boxPCode === 'OK' ? 'selected' : ''}>OK</option>
+                        <option value="NG" ${pallet.boxPCode === 'NG' ? 'selected' : ''}>NG</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-select" id="boxContent${palletCount}" required 
+                            onchange="calculatePercentOK(${palletCount})">
+                        <option value="">--</option>
+                        <option value="OK" ${pallet.boxContent === 'OK' ? 'selected' : ''}>OK</option>
+                        <option value="NG" ${pallet.boxContent === 'NG' ? 'selected' : ''}>NG</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-select" id="boxColor${palletCount}" required 
+                            onchange="calculatePercentOK(${palletCount})">
+                        <option value="">--</option>
+                        <option value="OK" ${pallet.boxColor === 'OK' ? 'selected' : ''}>OK</option>
+                        <option value="NG" ${pallet.boxColor === 'NG' ? 'selected' : ''}>NG</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-select" id="sachetSeal${palletCount}" required 
+                            onchange="calculatePercentOK(${palletCount})">
+                        <option value="">--</option>
+                        <option value="OK" ${pallet.sachetSeal === 'OK' ? 'selected' : ''}>OK</option>
+                        <option value="NG" ${pallet.sachetSeal === 'NG' ? 'selected' : ''}>NG</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-select" id="sachetPCode${palletCount}" required 
+                            onchange="calculatePercentOK(${palletCount})">
+                        <option value="">--</option>
+                        <option value="OK" ${pallet.sachetPCode === 'OK' ? 'selected' : ''}>OK</option>
+                        <option value="NG" ${pallet.sachetPCode === 'NG' ? 'selected' : ''}>NG</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="text" class="form-control percent-ok" id="percentOK${palletCount}" 
+                           value="${pallet.percentOK}" readonly>
+                </td>
+                <td>
+                    <textarea class="form-control" id="notes${palletCount}" rows="2" 
+                              placeholder="Notes...">${pallet.notes === '-' ? '' : pallet.notes}</textarea>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removePalletRow(${palletCount})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    } else {
+        // Add empty first row if no checks exist
+        addPalletRow();
+    }
+    
+    // Show success message indicating EDIT mode
     Swal.fire({
-        icon: 'success',
-        title: 'Form Recalled!',
-        html: `Form <strong>${form.formNumber}</strong> data has been loaded.<br><br>
-               <small>You can now add new pallet checks for this session.</small>`,
-        confirmButtonColor: '#667eea'
-    });
-}
-
-function populateProductDropdown() {
-    const productSelect = document.getElementById('productItem');
-    productSelect.innerHTML = '<option value="">-- Select Product --</option>';
-    
-    // Add products from standard matrix
-    Object.keys(STANDARD_MATRIX).forEach(product => {
-        const option = document.createElement('option');
-        option.value = product;
-        option.textContent = product;
-        productSelect.appendChild(option);
+        icon: 'info',
+        title: 'Form Loaded for Editing',
+        html: `Form <strong>${form.formNumber}</strong> has been loaded.<br><br>
+               <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                   <i class="fas fa-edit"></i> <strong>EDIT MODE</strong><br>
+                   <small>You can modify existing pallet checks or add new ones.<br>
+                   When you submit, this will UPDATE the existing form.</small>
+               </div>`,
+        confirmButtonColor: '#667eea',
+        confirmButtonText: 'Start Editing'
     });
 }
 
@@ -1063,7 +1151,11 @@ function submitForm() {
         return;
     }
     
-    // Collect Section 1 data (without formNumber yet)
+    // Check if this is an existing form (edit mode) or new form
+    const existingFormNumber = document.getElementById('formNumber').value;
+    const isEditMode = existingFormNumber && existingFormNumber.trim() !== '';
+    
+    // Collect Section 1 data
     const formData = {
         checkDate: document.getElementById('checkDate').value,
         prodDate: document.getElementById('prodDate').value,
@@ -1092,11 +1184,18 @@ function submitForm() {
         sectionManager: document.getElementById('sectionManager').value || '-',
         
         // Pallet checks
-        palletChecks: []
+        palletChecks: [],
+        
+        // CRUD indicator
+        isEdit: isEditMode
     };
     
-    // Generate form number automatically
-    formData.formNumber = generateFormNumber(formData);
+    // Use existing form number or generate new one
+    if (isEditMode) {
+        formData.formNumber = existingFormNumber;
+    } else {
+        formData.formNumber = generateFormNumber(formData);
+    }
     
     // Collect all pallet check data
     rows.forEach((row) => {
@@ -1116,78 +1215,115 @@ function submitForm() {
         formData.palletChecks.push(palletData);
     });
     
-    // Show loading spinner
-    document.getElementById('loadingSpinner').classList.add('active');
+    // Confirm before submitting (different message for edit vs create)
+    const confirmTitle = isEditMode ? 'Update Existing Form?' : 'Submit New Form?';
+    const confirmText = isEditMode 
+        ? `This will UPDATE form ${formData.formNumber} with the current data.`
+        : 'This will create a new quality control form.';
     
-    // Send data to Google Apps Script
-    fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(() => {
-        // Hide loading spinner
-        document.getElementById('loadingSpinner').classList.remove('active');
-        
-        // Show success message with generated form number
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            html: `<div style="text-align: left;">
-                    <p><strong>Form has been submitted successfully!</strong></p>
-                    <hr>
-                    <p><strong>Form Number:</strong> <span style="color: #667eea; font-size: 20px; font-weight: bold;">${formData.formNumber}</span></p>
-                    <p><strong>Date:</strong> ${formData.checkDate}</p>
-                    <p><strong>Product:</strong> ${formData.productItem}</p>
-                    <p><strong>Total Pallets Checked:</strong> ${formData.palletChecks.length}</p>
-                    <p><strong>QC Personnel:</strong> ${formData.qcPersonnel}</p>
-                   </div>`,
-            confirmButtonColor: '#667eea',
-            confirmButtonText: 'OK',
-            width: '600px'
-        }).then(() => {
-            // Ask if user wants to create another form
-            Swal.fire({
-                title: 'Create another form?',
-                text: 'Do you want to submit another inspection form?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#667eea',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, new form',
-                cancelButtonText: 'No, I\'m done'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Reset for new form
-                    document.getElementById('qcForm').reset();
-                    document.getElementById('checkDate').valueAsDate = new Date();
-                    document.getElementById('checkingTableBody').innerHTML = '';
-                    palletCount = 0;
-                    addPalletRow();
-                    populateStandards();
-                }
+    Swal.fire({
+        title: confirmTitle,
+        text: confirmText,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#667eea',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: isEditMode ? '<i class="fas fa-save"></i> Update' : '<i class="fas fa-paper-plane"></i> Submit',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading spinner
+            document.getElementById('loadingSpinner').classList.add('active');
+            
+            // Send data to Google Apps Script
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(() => {
+                // Hide loading spinner
+                document.getElementById('loadingSpinner').classList.remove('active');
+                
+                // Show success message
+                const successTitle = isEditMode ? 'Updated Successfully!' : 'Submitted Successfully!';
+                const successMessage = isEditMode 
+                    ? `Form <strong>${formData.formNumber}</strong> has been updated.`
+                    : `Form <strong>${formData.formNumber}</strong> has been created.`;
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: successTitle,
+                    html: `<div style="text-align: left;">
+                            <p>${successMessage}</p>
+                            <hr>
+                            <p><strong>Form Number:</strong> <span style="color: #667eea; font-size: 20px; font-weight: bold;">${formData.formNumber}</span></p>
+                            <p><strong>Date:</strong> ${formData.checkDate}</p>
+                            <p><strong>Product:</strong> ${formData.productItem}</p>
+                            <p><strong>Total Pallets Checked:</strong> ${formData.palletChecks.length}</p>
+                            <p><strong>QC Personnel:</strong> ${formData.qcPersonnel}</p>
+                           </div>`,
+                    confirmButtonColor: '#667eea',
+                    confirmButtonText: 'OK',
+                    width: '600px'
+                }).then(() => {
+                    // Ask what to do next
+                    Swal.fire({
+                        title: 'What would you like to do?',
+                        icon: 'question',
+                        showDenyButton: true,
+                        showCancelButton: true,
+                        confirmButtonColor: '#667eea',
+                        denyButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="fas fa-plus"></i> New Form',
+                        denyButtonText: '<i class="fas fa-edit"></i> Continue Editing',
+                        cancelButtonText: '<i class="fas fa-check"></i> Done'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Create new form
+                            document.getElementById('qcForm').reset();
+                            document.getElementById('checkDate').valueAsDate = new Date();
+                            document.getElementById('formNumber').value = ''; // Clear form number
+                            document.getElementById('checkingTableBody').innerHTML = '';
+                            palletCount = 0;
+                            addPalletRow();
+                            populateStandards();
+                        } else if (result.isDenied) {
+                            // Continue editing (do nothing, keep current form)
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Continue Editing',
+                                text: 'You can continue modifying this form.',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        }
+                        // If cancelled, do nothing (stay on current form)
+                    });
+                });
+            })
+            .catch((error) => {
+                // Hide loading spinner
+                document.getElementById('loadingSpinner').classList.remove('active');
+                
+                // Show error message
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Submission Error',
+                    html: 'Failed to submit data. Please check:<br>' +
+                          '• Your internet connection<br>' +
+                          '• Google Apps Script URL is correct<br>' +
+                          '• Google Apps Script is deployed properly',
+                    confirmButtonColor: '#667eea'
+                });
+                
+                console.error('Submission Error:', error);
             });
-        });
-    })
-    .catch((error) => {
-        // Hide loading spinner
-        document.getElementById('loadingSpinner').classList.remove('active');
-        
-        // Show error message
-        Swal.fire({
-            icon: 'error',
-            title: 'Submission Error',
-            html: 'Failed to submit data. Please check:<br>' +
-                  '• Your internet connection<br>' +
-                  '• Google Apps Script URL is correct<br>' +
-                  '• Google Apps Script is deployed properly',
-            confirmButtonColor: '#667eea'
-        });
-        
-        console.error('Submission Error:', error);
+        }
     });
 }
 
@@ -1205,4 +1341,13 @@ function autoSave() {
 function exportFormData() {
     // Can implement export feature if needed
     console.log('Export feature can be implemented here');
+}
+
+function formatDateForInput(dateString) {
+    if (!dateString) return '';
+    // Handle ISO date format or other formats
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return ''; // Return empty if invalid
+    // Format as yyyy-MM-dd for HTML date inputs
+    return date.toISOString().split('T')[0];
 }
