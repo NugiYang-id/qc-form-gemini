@@ -2,7 +2,7 @@
 // CONFIGURATION
 // ============================================
 
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIZ61V0-tjLyE8nQsQRJjLIWu1dcLDc1aTLVHj76CIbPWT0w1VzF1azZv4N4A7ya_L1g/execgit ';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIZ61V0-tjLyE8nQsQRJjLIWu1dcLDc1aTLVHj76CIbPWT0w1VzF1azZv4N4A7ya_L1g/exec';
 
 // ============================================
 // STANDARD MATRIX (Loaded from Google Sheets)
