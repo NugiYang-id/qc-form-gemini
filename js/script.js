@@ -557,6 +557,7 @@ function viewFormDetails(form) {
     });
 }
 
+
 function recallForm(form) {
     Swal.close();
     
@@ -568,6 +569,50 @@ function recallForm(form) {
         if (isNaN(date.getTime())) return dateString; // Return as-is if invalid
         // Format as yyyy-MM-dd
         return date.toISOString().split('T')[0];
+    };
+    
+    // FIX 3: Format time properly (HH:mm format)
+    const formatTimeForInput = (timeValue) => {
+        if (!timeValue) return '';
+        
+        // If it's already in HH:mm format, return it
+        if (typeof timeValue === 'string' && /^\d{2}:\d{2}$/.test(timeValue)) {
+            return timeValue;
+        }
+        
+        // If it's a date object or ISO string
+        const date = new Date(timeValue);
+        if (!isNaN(date.getTime())) {
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+        
+        return '';
+    };
+    
+    // FIX 2: Format percentage properly
+    const formatPercentage = (percentValue) => {
+        if (!percentValue) return '';
+        
+        // If it's already a string with %, return it
+        if (typeof percentValue === 'string' && percentValue.includes('%')) {
+            return percentValue;
+        }
+        
+        // If it's a decimal number (like 0.8 or 1), convert to percentage
+        const numValue = parseFloat(percentValue);
+        if (!isNaN(numValue)) {
+            if (numValue <= 1) {
+                // It's a decimal, convert to percentage
+                return (numValue * 100).toFixed(1) + '%';
+            } else {
+                // It's already a percentage number
+                return numValue.toFixed(1) + '%';
+            }
+        }
+        
+        return percentValue;
     };
     
     // Populate Section 1 with recalled data
@@ -610,7 +655,7 @@ function recallForm(form) {
                 </td>
                 <td>
                     <input type="time" class="form-control" id="time${palletCount}" 
-                           value="${pallet.time}" required>
+                           value="${formatTimeForInput(pallet.time)}" required>
                 </td>
                 <td>
                     <input type="number" class="form-control" id="totalCheck${palletCount}" 
@@ -659,7 +704,7 @@ function recallForm(form) {
                 </td>
                 <td>
                     <input type="text" class="form-control percent-ok" id="percentOK${palletCount}" 
-                           value="${pallet.percentOK}" readonly>
+                           value="${formatPercentage(pallet.percentOK)}" readonly>
                 </td>
                 <td>
                     <textarea class="form-control" id="notes${palletCount}" rows="2" 
@@ -693,6 +738,20 @@ function recallForm(form) {
         confirmButtonText: 'Start Editing'
     });
 }
+
+function populateProductDropdown() {
+    const productSelect = document.getElementById('productItem');
+    productSelect.innerHTML = '<option value="">-- Select Product --</option>';
+    
+    // Add products from standard matrix
+    Object.keys(STANDARD_MATRIX).forEach(product => {
+        const option = document.createElement('option');
+        option.value = product;
+        option.textContent = product;
+        productSelect.appendChild(option);
+    });
+}
+
 
 function updateLineDropdown(selectedProduct) {
     const lineInput = document.getElementById('line');
