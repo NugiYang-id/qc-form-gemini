@@ -251,6 +251,12 @@ body {
     max-width: 95% !important;
 }
 
+/* Enable horizontal scrolling */
+.dataTables_wrapper .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
 /* DataTable wrapper styling */
 #recallDataTable_wrapper {
     font-size: 14px;
@@ -264,6 +270,7 @@ body {
     font-size: 13px;
     padding: 12px 8px;
     border-bottom: 2px solid #667eea;
+    white-space: nowrap;
 }
 
 /* DataTable rows */
@@ -281,6 +288,68 @@ body {
     vertical-align: middle;
     padding: 10px 8px;
     font-size: 13px;
+}
+
+/* Expandable row control button */
+td.dt-control {
+    background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iIzY2N2VlYSIgY2xhc3M9ImJpIGJpLXBsdXMtY2lyY2xlIiB2aWV3Qm94PSIwIDAgMTYgMTYiPjxwYXRoIGQ9Ik04IDE1QTcgNyAwIDEgMSA4IDFhNyA3IDAgMCAxIDAgMTR6bTAgMUE4IDggMCAxIDAgOCAwYTggOCAwIDAgMCAwIDE2eiIvPjxwYXRoIGQ9Ik04IDRhLjUuNSAwIDAgMSAuNS41djNoM2EuNS41IDAgMCAxIDAgMWgtM3YzYS41LjUgMCAwIDEtMSAwdi0zaC0zYS41LjUgMCAwIDEgMC0xaDNWNC41QS41LjUgMCAwIDEgOCA0eiIvPjwvc3ZnPg==') no-repeat center center;
+    cursor: pointer;
+    width: 30px;
+    min-width: 30px;
+    background-size: 18px;
+    padding: 0 !important;
+}
+
+tr.dt-hasChild td.dt-control {
+    background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iI2RjMzU0NSIgY2xhc3M9ImJpIGJpLWRhc2gtY2lyY2xlIiB2aWV3Qm94PSIwIDAgMTYgMTYiPjxwYXRoIGQ9Ik04IDE1QTcgNyAwIDEgMSA4IDFhNyA3IDAgMCAxIDAgMTR6bTAgMUE4IDggMCAxIDAgOCAwYTggOCAwIDAgMCAwIDE2eiIvPjxwYXRoIGQ9Ik00IDhhLjUuNSAwIDAgMSAuNS0uNWg3YS41LjUgMCAwIDEgMCAxaC03QS41LjUgMCAwIDEgNCA4eiIvPjwvc3ZnPg==') no-repeat center center;
+    background-size: 18px;
+}
+
+/* Child row styling */
+.child-row-details {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.child-row-details .row {
+    margin-bottom: 10px;
+}
+
+.child-row-details strong {
+    color: #495057;
+    font-size: 12px;
+}
+
+.child-row-details .text-primary {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Child row table styling */
+.child-row-details .table {
+    margin-bottom: 0;
+    font-size: 11px;
+}
+
+.child-row-details .table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.child-row-details .badge {
+    font-size: 9px;
+    padding: 3px 6px;
 }
 
 /* DataTable search box styling */
@@ -390,7 +459,12 @@ body {
     .swal-wide {
         width: 98% !important;
     }
+    
+    td.dt-control {
+        background-size: 14px;
+    }
 }
+
 
 /* Loading state for DataTable */
 .dataTables_processing {
@@ -414,20 +488,26 @@ body {
 }
 
 /* Column specific widths */
-#recallDataTable th:nth-child(1), /* Form # */
+#recallDataTable th:nth-child(1), /* Control */
 #recallDataTable td:nth-child(1) {
+    width: 30px;
+    min-width: 30px;
+}
+
+#recallDataTable th:nth-child(2), /* Form # */
+#recallDataTable td:nth-child(2) {
     min-width: 100px;
     font-weight: 600;
 }
 
-#recallDataTable th:nth-child(8), /* Pallets */
-#recallDataTable td:nth-child(8) {
+#recallDataTable th:nth-child(9), /* Pallets */
+#recallDataTable td:nth-child(9) {
     text-align: center;
     width: 80px;
 }
 
-#recallDataTable th:nth-child(9), /* Actions */
-#recallDataTable td:nth-child(9) {
+#recallDataTable th:nth-child(10), /* Actions */
+#recallDataTable td:nth-child(10) {
     text-align: center;
     width: 100px;
 }
@@ -459,4 +539,32 @@ body {
 .form-select-sm:focus {
     border-color: #667eea;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Horizontal scroll indicator */
+.dataTables_wrapper .dataTables_scroll {
+    position: relative;
+}
+
+.dataTables_scrollBody {
+    overflow-x: auto !important;
+}
+
+/* Custom scrollbar styling */
+.dataTables_scrollBody::-webkit-scrollbar {
+    height: 8px;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar-thumb:hover {
+    background: #5568d3;
 }

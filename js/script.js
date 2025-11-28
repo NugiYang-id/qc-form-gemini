@@ -739,6 +739,8 @@ function recallForm(form) {
     });
 }
 
+
+
 function populateProductDropdown() {
     const productSelect = document.getElementById('productItem');
     productSelect.innerHTML = '<option value="">-- Select Product --</option>';
@@ -1385,6 +1387,7 @@ function submitForm() {
         }
     });
 }
+
 
 // ============================================
 // UTILITY FUNCTIONS
